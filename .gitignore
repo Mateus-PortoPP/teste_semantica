@@ -63,3 +63,6 @@ site/
 
 # copias da ontologia guardadas pelo akme reset
 backups/
+
+# anotacoes pessoais de desenvolvimento (nao fazem parte do template)
+notas/

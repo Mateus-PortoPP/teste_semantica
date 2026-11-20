@@ -1,6 +1,6 @@
 # Exportar a ontologia e os dados para o Neo4j
 
-Guia de uso, do primeiro uso até ver o grafo. O motivo de cada escolha e as provas estão nas páginas de `docs/exportacao-neo4j/` (visão geral em `index.md`, provas em `task-9-aceitacao.md`; `uv run --extra docs mkdocs serve`).
+Guia de uso, do primeiro uso até ver o grafo.
 
 **O que você vai ter no fim:** os dados do cliente como um grafo no Neo4j, com a ontologia junto: conceitos, definições, hierarquia e relações como setas.
 
@@ -415,8 +415,6 @@ Cuidados com dado real de cliente, antes de usar o console:
 - o Browser local envia telemetria por padrão (`client.allow_telemetry=false` na configuração do servidor desliga; não testado);
 - combine com o cliente antes.
 
-Detalhes e fontes: `docs/exportacao-neo4j/pesquisa-visualizacao.md`, seções 1.3 e 1.4.
-
 Cada nó de dado tem:
 - o label da classe, por exemplo `Pedido`;
 - uma propriedade por coluna preenchida, com o nome da coluna e o tipo aprovado;
@@ -518,7 +516,7 @@ O comando não mostra nada quando dá certo. Depois, rode a carga de novo (seç�
 ## Limites conhecidos
 
 - **Tamanho:** não há teto de linhas. Cada tabela é lida em blocos de 5.000 linhas, e o akme guarda em memória só as chaves e os valores de join.
-- **Memória e tempo:** no Olist inteiro (cerca de 446 mil linhas, com os comentários acentuados das avaliações), o dry-run levou 2,24 s com 144 MB, e a carga num banco vazio levou 34,1 s, com 356 MB de memória residente máxima no processo do akme; na demo, 0,39 s e 3,18 s. Medidos com `/usr/bin/time -l` sobre o `akme publish`, uma vez, numa máquina (Apple M5, 24 GB), na rodada final. O Olist é um registro de execução (dados e ontologia fora do repositório, numa cópia com três correções); detalhes em `docs/exportacao-neo4j/task-9-aceitacao.md`. O driver do Neo4j guarda parte da memória do texto acentuado em memória nativa, que o Python não libera. Em máquinas com pouca memória, feche outros programas antes de carregar.
+- **Memória e tempo:** no Olist inteiro (cerca de 446 mil linhas, com os comentários acentuados das avaliações), o dry-run levou 2,24 s com 144 MB, e a carga num banco vazio levou 34,1 s, com 356 MB de memória residente máxima no processo do akme; na demo, 0,39 s e 3,18 s. Medidos com `/usr/bin/time -l` sobre o `akme publish`, uma vez, numa máquina (Apple M5, 24 GB), na rodada final. O Olist é um registro de execução (dados e ontologia fora do repositório, numa cópia com três correções). O driver do Neo4j guarda parte da memória do texto acentuado em memória nativa, que o Python não libera. Em máquinas com pouca memória, feche outros programas antes de carregar.
 - **Memória do plano proporcional ao número de chaves:** o plano não guarda as linhas, mas guarda um `_id` por linha da tabela que está lendo e uma contagem por valor de cada coluna de join. A ordem de grandeza: no Olist (446 mil linhas), o dry-run usou cerca de 144 MB; extrapolando, para 10 milhões de linhas, de 1,5 a 2 GB só de chaves, e cerca de 13 minutos de carga; 100 milhões não cabem numa máquina comum.
 - **Carga sempre completa, sem incremental:** cada carga lê a origem inteira e regrava todos os nós e arestas, mesmo que só uma linha tenha mudado.
 - **Duas cargas ao mesmo tempo:** a marca `_carga` tem precisão de milissegundos, e a trava da seção 3.3 (regra 4) faz a carga mais antiga parar sem gravar nem apagar mais nada. Sobra uma janela de milissegundos: um bloco da carga antiga que já estava em andamento quando a nova gravou a marca ainda pode terminar; a sincronização da nova apaga o que ele gravou e a nova não regravou. Se a carga nova começar entre os dois comandos da sincronização, a antiga para com `outra carga deste projeto comecou durante a sincronizacao`: rode a carga de novo.
